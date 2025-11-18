@@ -1,19 +1,48 @@
 #include <Arduino.h>
 #include <Stepper.h>
+#include <WiFi.h>
 
-const int stepsPerRevolution = 2048;  // number of steps per revolution
-const int RevolutionsPerMinute = 17;  // Adjustable range of 28BYJ-48 stepper is 0~17 rpm
-const unsigned long coolDown = 5000;            // how long before the door relocks automatically
+// Network Information
+const char* ssid = "YOUR_NETWORK_NAME";
+const char* password = "YOUR_NETWORK_PASSWORD";
+
+const int stepsPerRevolution = 2048; // Number of steps per revolution
+const int RevolutionsPerMinute = 5;  // Adjustable range of 28BYJ-48 stepper is 0~17 rpm
+const unsigned long coolDown = 5000; // How long before the door relocks automatically
 bool unlocked = false;
 unsigned long currentTime = millis();
 
-// initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+// ULN2003 Motor Driver Pins
+#define IN1 19
+#define IN2 18
+#define IN3 5
+#define IN4 17
+
+// Initialize the stepper library on pins
+Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
 
 void setup() {
+  // Connect to home network
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  Serial.begin(115200);
+  Serial.print("Connecting to ");
+  Serial.print(ssid);
+  Serial.println("...");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+Serial.println("WiFi connected!");
+Serial.println("IP address: ");
+Serial.println(WiFi.localIP());
+
+  // Set Speed
   myStepper.setSpeed(RevolutionsPerMinute);
-  // initialize the serial port:
-  Serial.begin(9600);
 }
 
 void loop() {
